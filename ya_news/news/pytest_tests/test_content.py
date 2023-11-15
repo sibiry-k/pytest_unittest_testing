@@ -1,5 +1,6 @@
 import pytest
 
+from django.conf import settings
 from django.urls import reverse
 
 
@@ -9,7 +10,7 @@ def test_paginator(client):
     url = reverse('news:home')
     response = client.get(url)
     object_list = response.context['object_list'].count()
-    assert object_list == 10
+    assert object_list == settings.NEWS_COUNT_ON_HOME_PAGE
 
 
 @pytest.mark.django_db

@@ -43,20 +43,21 @@ class TestContent(TestCase):
         url = reverse('notes:list')
         for user, notes in users_notes:
             self.client.force_login(user)
-            response = self.client.get(url)
-            self.assertEqual(
-                response.context['object_list'].count(),
-                notes
-            )
+            with self.subTest():
+                response = self.client.get(url)
+                self.assertEqual(
+                    response.context['object_list'].count(),
+                    notes
+                )
 
     def test_add_edit_pages_has_form(self):
         self.client.force_login(self.author)
         note = Note.objects.first()
         urls = (
-            ('notes:add', None),
+            ('notes:add', None,),
             ('notes:edit', (note.slug,)),
         )
-        self.client.force_login(self.author)
         for name, args in urls:
-            response = self.client.get(reverse(name, args=args))
-            self.assertIn('form', response.context)
+            with self.subTest():
+                response = self.client.get(reverse(name, args=args))
+                self.assertIn('form', response.context)

@@ -10,31 +10,38 @@ from news.forms import BAD_WORDS, WARNING
 @pytest.mark.django_db
 def test_anonymous_user_cant_create_comment(client, news, form_data):
     url = reverse('news:detail', args=(news.id,))
+    response = client.get(url)
+    news = response.context['news']
+    comments_count_before = news.comment_set.count()
     client.post(url, form_data)
     response = client.get(url)
     news = response.context['news']
-    comments_count = news.comment_set.count()
-    assert comments_count == 0
+    comments_count_after = news.comment_set.count()
+    assert comments_count_before == comments_count_after
 
 
 @pytest.mark.django_db
 def test_author_can_create_comment(author_client, news, form_data):
     url = reverse('news:detail', args=(news.id,))
+    response = author_client.get(url)
+    news = response.context['news']
+    comments_count_before = news.comment_set.count()
     author_client.post(url, form_data)
     response = author_client.get(url)
     news = response.context['news']
-    comments_count = news.comment_set.count()
-    assert comments_count == 1
+    comments_count_after = news.comment_set.count()
+    assert comments_count_before + 1 == comments_count_after
 
 
 @pytest.mark.django_db
 def test_user_cant_use_bad_words(author_client, news):
+    comments_count_before = news.comment_set.count()
     url = reverse('news:detail', args=(news.id,))
     bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS[0]}, еще текст'}
     response = author_client.post(url, data=bad_words_data)
     assert WARNING in response.context['form'].errors['text']
-    comments_count = news.comment_set.count()
-    assert comments_count == 0
+    comments_count_after = news.comment_set.count()
+    assert comments_count_before == comments_count_after
 
 
 @pytest.mark.django_db
@@ -42,10 +49,9 @@ def test_user_cant_use_bad_words(author_client, news):
 def test_author_can_delete_comment(author_client, news, comment):
     url = reverse('news:delete', args=(comment.id,))
     comments_count_before = news.comment_set.count()
-    assert comments_count_before == 1
     author_client.delete(url)
-    comments_count = news.comment_set.count()
-    assert comments_count == 0
+    comments_count_after = news.comment_set.count()
+    assert comments_count_after + 1 == comments_count_before
 
 
 @pytest.mark.django_db
@@ -53,10 +59,9 @@ def test_author_can_delete_comment(author_client, news, comment):
 def test_user_cant_delete_comment(user_client, news, comment):
     url = reverse('news:delete', args=(comment.id,))
     comments_count_before = news.comment_set.count()
-    assert comments_count_before == 1
     user_client.delete(url)
-    comments_count = news.comment_set.count()
-    assert comments_count == 1
+    comments_count_after = news.comment_set.count()
+    assert comments_count_after == comments_count_before
 
 
 @pytest.mark.django_db

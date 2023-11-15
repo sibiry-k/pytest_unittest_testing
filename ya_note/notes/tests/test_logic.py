@@ -4,10 +4,11 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from pytils.translit import slugify
+
 from notes.forms import WARNING
 from notes.models import Note
 
-from pytils.translit import slugify
 
 User = get_user_model()
 
@@ -73,16 +74,18 @@ class TestLogic(TestCase):
         self.assertNotEqual(notes_count_before, notes_count_after)
 
     def test_user_cant_delete_note_another_user(self):
+        notes_count_before = Note.objects.count()
         response = self.user_client.delete(self.delete_url)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-        notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 1)
+        notes_count_after = Note.objects.count()
+        self.assertEqual(notes_count_before, notes_count_after)
 
     def test_author_can_delete_note(self):
+        notes_count_before = Note.objects.count()
         response = self.auth_client.delete(self.delete_url)
         self.assertRedirects(response, self.success_url)
-        notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 0)
+        notes_count_after = Note.objects.count()
+        self.assertNotEqual(notes_count_before, notes_count_after)
 
     def test_author_can_edit_note(self):
         response = self.auth_client.post(self.edit_url, data=self.form_data)

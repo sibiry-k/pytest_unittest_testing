@@ -3,7 +3,7 @@ import pytest
 from django.conf import settings
 from django.utils import timezone
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from news.models import Comment, News
 
@@ -32,16 +32,15 @@ def user_client(user, client):
 
 @pytest.fixture
 def news():
-    news = News.objects.create(
+    return News.objects.create(
         title='Заголовок',
         text='Новость № 1',
     )
-    return news
 
 
 @pytest.fixture
 def news_objects():
-    today = datetime.today()
+    today = timezone.now()
     all_news = [
         News(
             title=f'Новость {index}',
@@ -56,12 +55,11 @@ def news_objects():
 
 @pytest.fixture
 def comment(news, author):
-    comment = Comment.objects.create(
+    return Comment.objects.create(
         news=news,
         author=author,
         text='Текст комментария',
     )
-    return comment
 
 
 @pytest.fixture
